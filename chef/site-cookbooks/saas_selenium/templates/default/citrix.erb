@@ -1,0 +1,14 @@
+Feature: Genesys Citrix login works
+
+Background:
+  Given I am on <%%= url %>
+
+Scenario: Login to citrix storefront
+  Then I take a screenshot "citrix-pre-login"
+  When I fill in "Enter user name" with "<%%= user %>"
+  When I fill in "passwd" with "<%%= pass %>"
+  And I press "Log_On"
+  Then I sleep 10 seconds
+  Then I take a screenshot "citrix-logged-in"
+  Then I should see "WFM"
+  

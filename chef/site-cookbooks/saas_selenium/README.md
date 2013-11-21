@@ -1,0 +1,1 @@
+This cookbook deploys the SaaS Operations Selenium test VM that integrates with Zabbix.

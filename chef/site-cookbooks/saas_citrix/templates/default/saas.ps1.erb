@@ -1,0 +1,134 @@
+# -------------------------------------
+# Common functions
+# -------------------------------------
+
+function Setup-Networking()
+{
+  $computer = Get-WmiObject -Class Win32_ComputerSystem
+  $computer.Rename("<%= @hostname %>")
+  $nic = Get-WmiObject Win32_NetworkAdapterConfiguration | where {$_.IPAddress -match "10.51"}
+  $ip = $nic.IPAddress
+  $gateway = $nic.DefaultIPGateway
+  $nic.EnableStatic($ip, "255.255.255.0")
+  $nic.SetGateways($gateway, 1)
+  $DNSServers = @(<%= @name_servers %>)
+  $nic.SetDNSServerSearchOrder($DNSServers)
+}
+
+function Update-Nameservers()
+{
+  $nic = Get-WmiObject Win32_NetworkAdapterConfiguration | where {$_.IPAddress -match "10.51"}
+  $DNSServers = @("<%= node[:saas_citrix][:ad1][:ip] %>","<%= node[:saas_citrix][:ad2][:ip] %>")
+  $nic.SetDNSServerSearchOrder($DNSServers)
+  invoke-wmimethod -Class win32_networkadapterconfiguration -Name setDNSSuffixSearchOrder -ArgumentList @("<%= node[:saas_citrix][:domain] %>"), $null
+}
+
+function Set-AutoLogin([bool] $domain=$FALSE)
+{
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name DefaultUserName -Value "Administrator"
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name DefaultPassword -Value "NewS3cr3t32u3er!"
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name AutoAdminLogon -Value "1"
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name ForceAutoLogon -Value "1"
+  if ($domain -eq $True) {
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name DefaultDomainName -Value "<%= node[:saas_citrix][:domain] %>"
+  }
+}
+
+function Stop-AutoLogin()
+{
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name AutoAdminLogon -Value "0"
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name ForceAutoLogon -Value "0"
+}
+
+function Windows-Update()
+{
+  # Set-ExecutionPolicy Bypass
+  Import-Module PSWindowsUpdate
+  Get-WUServiceManager
+  Get-WUInstall -WindowsUpdate -AcceptAll -Verbose -IgnoreReboot
+}
+
+function Join-Domain()
+{
+  $localhost = $env:computername
+  $secpasswd = ConvertTo-SecureString "<%= node[:saas_citrix][:admin_pw] %>" -AsPlainText -Force
+  $mycreds = New-Object System.Management.Automation.PSCredential("Administrator", $secpasswd)
+  Add-Computer -Credential $mycreds -DomainName <%= node[:saas_citrix][:domain] %>
+}
+
+# -------------------------------------
+# Active Directory Functions
+# -------------------------------------
+
+function Install-AD()
+{
+  dcpromo /unattend:"<%= node[:saas_citrix][:script_dir] %>/dcpromo.txt" 
+}
+
+function Add-Records()
+{
+  $localhost = $env:computername
+  $domain = "<%= node[:saas_citrix][:domain] %>"
+  invoke-wmimethod -Class win32_networkadapterconfiguration -Name setDNSSuffixSearchOrder -ArgumentList @("<%= node[:saas_citrix][:domain] %>"), $null
+  dnscmd $localhost /recordadd $domain <%= node[:saas_citrix][:ad1][:hostname] %> A <%= node[:saas_citrix][:ad1][:ip] %>
+  dnscmd $localhost /recordadd $domain <%= node[:saas_citrix][:ad2][:hostname] %> A <%= node[:saas_citrix][:ad2][:ip] %>
+  dnscmd $localhost /recordadd $domain <%= node[:saas_citrix][:xa1][:hostname] %> A <%= node[:saas_citrix][:xa1][:ip] %>
+  dnscmd $localhost /recordadd $domain <%= node[:saas_citrix][:xa2][:hostname] %> A <%= node[:saas_citrix][:xa2][:ip] %>
+  dnscmd $localhost /resetforwarders '10.51.35.5'
+}
+
+function Import-Citrix-Policy()
+{
+  Import-Module GroupPolicy
+  Import-GPO -BackupId F6C0067A-3CDA-49A5-9BEA-BDD15B8111FS -TargetName 'XenApp Server Policy' -path 'C:\Users\Administrator\Desktop\XenApp Installer\gpo' -CreateIfNeeded
+}
+
+# -------------------------------------
+# XenApp Functions
+# -------------------------------------
+
+function Install-XenApp()
+{
+  & 'C:\Users\Administrator\Desktop\XA_Installer\XenApp Server Setup\bin\XenAppSetupConsole.exe' '/install:XenApp'
+}
+
+function Patch-XenApp()
+{
+  msiexec /p "C:\Users\Administrator\Desktop\XenApp Installer\XA650W2K8R2X64R02.msp" /passive /norestart
+}
+
+function Install-RDS()
+{
+  Import-Module ServerManager
+  Add-WindowsFeature -Name AS-Net-Framework
+  Add-WindowsFeature -Name RDS-RD-Server -IncludeAllSubFeature
+}
+
+function Install-Storefront()
+{
+  & 'C:\Program Files\AutoHotKey\AutoHotKey.exe' '<%= node[:saas_citrix][:script_dir] %>/storefront.ahk'
+}
+
+function Install-DesktopExperience()
+{
+  Import-Module ServerManager
+  Add-WindowsFeature -Name Desktop-Experience
+}
+
+function SQL-Driver()
+{
+  msiexec /i "C:\Users\Administrator\Desktop\XenApp Installer\sqlncli_x64.msi" IACCEPTSQLNCLILICENSETERMS=YES /passive
+}
+
+function Config-XenApp()
+{
+  #& 'C:\Program Files (x86)\Citrix\XenApp\ServerConfig\XenAppConfigConsole.exe' '/ExecutionMode:Create' '/FarmName:Tenant001' '/CitrixAdministratorAccount:tenant001\Administrator' '/AddLocalAdmin:True' '/DsnFile:C:\scripts\database.dsn.txt' '/AuthenticationType:Sql' '/OdbcUserName:citrix001' '/OdbcPassword:VRxyFjzD8!KUoTNEJr*b' '/LicenseServerName:10.51.35.19' 
+
+  <% if @hostname == node[:saas_citrix][:xa1][:hostname] %>
+    & 'C:\Program Files (x86)\Citrix\XenApp\ServerConfig\XenAppConfigConsole.exe' '/ExecutionMode:Create' '/FarmName:<%= node[:saas_citrix][:farm] %>' '/CitrixAdministratorAccount:<%= node[:saas_citrix][:domain] %>\Administrator' '/AddAuthenticatedUsersToRemoteDesktopUserGroup:True' '/AddLocalAdmin:True' '/SqlExpressRootDir:"C:\Users\Administrator\Desktop\XA_Installer\Support\SqlExpress_2008"' '/SimpleDB' '/OdbcUserName:Administrator' '/OdbcPassword:<%= node[:saas_citrix][:admin_pw] %>' '/LicenseServerName:10.51.35.19' 
+  <% else %>
+    & 'C:\Program Files (x86)\Citrix\XenApp\ServerConfig\XenAppConfigConsole.exe' '/ExecutionMode:Join' '/ServerName:<%= node[:saas_citrix][:xa1][:hostname] %>' '/SimpleDB' '/OdbcUserName:Administrator' '/OdbcPassword:<%= node[:saas_citrix][:admin_pw] %>' '/LicenseServerName:10.51.35.19' 
+  <% end %>
+}
+
+

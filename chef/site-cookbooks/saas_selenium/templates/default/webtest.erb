@@ -1,0 +1,14 @@
+#!/bin/bash
+node=$1
+typeof=$2
+url=$3
+user=$4
+pass=$5
+place=$6
+
+sudo -u selenium /bin/bash -l <<EOT
+  [[ -s "/usr/local/rvm/scripts/rvm" ]] && source "/usr/local/rvm/scripts/rvm"
+  cd /home/selenium
+  exec /usr/local/rvm/bin/ruby /home/selenium/webtest.rb $node $typeof $url $user $pass $place
+  echo "$node $typeof $url $user $pass $place" >> /tmp/test.log
+EOT

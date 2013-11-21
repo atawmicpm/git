@@ -1,0 +1,6 @@
+description     "Xvfb X Server"
+start on (net-device-up
+          and local-filesystems
+          and runlevel [2345])
+stop on runlevel [016]
+exec /usr/bin/xvfb-run /usr/bin/java -jar /usr/local/bin/selenium-server-standalone-2.37.0.jar

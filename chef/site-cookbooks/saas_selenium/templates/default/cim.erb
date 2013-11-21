@@ -1,0 +1,15 @@
+Feature: Genesys CIMplicity login works
+
+Background:
+  Given I am on <%%= url %>
+
+Scenario: Login to cim CIMplicity as an agent
+  Then I sleep 5 seconds
+  Then I take a screenshot "cim-pre-login"
+  When I cimfill in "txtUsername_Value" with "<%%= user %>"
+  When I cimfill in "txtPassword_Value" with "<%%= pass %>"
+  When I cimfill in "txtPlaceName_Value" with "<%%= place %>"
+  And I cimpress "btnSignIn_Text"
+  Then I take a screenshot "cim-logged-in"
+  Then I should see "GX Queue Stats"
+  

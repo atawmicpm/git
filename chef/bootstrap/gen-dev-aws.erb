@@ -1,0 +1,83 @@
+bash -c '
+
+
+if [ -f /etc/yum.repos.d/amzn-main.repo ]; then
+
+yum-config-manager --disable amzn-main amzn-updates amzn-preview amzn-nosrc
+
+fi
+
+if [ ! -f /etc/yum.repos.d/gen-dev-qws-yum.repo ]; then
+
+
+cat <<'EOF' > /etc/yum.repos.d/gen-dev-aws-yum.repo
+[gen-dev-aws-yum]
+name=gen-dev-aws-yum
+baseurl=http://10.51.18.163:8080/devops/yumrepo/
+enabled=1
+gpgcheck=0
+EOF
+
+fi
+
+
+mkdir -p /etc/chef
+
+
+(
+cat <<'EOP'
+<%= validation_key %>
+EOP
+) > /tmp/validation.pem
+awk NF /tmp/validation.pem > /etc/chef/validation.pem
+rm /tmp/validation.pem
+
+(
+cat <<'EOP'
+<%= config_content %>
+EOP
+) > /etc/chef/client.rb
+
+(
+cat <<'EOP'
+<%= { "run_list" => @run_list }.to_json %>
+EOP
+) > /etc/chef/first-boot.json
+
+
+
+if [ ! -f /etc/chef/encrypted_data_bag_secret ]; then
+(
+cat <<'EOF' 
+YEp7qRujJ4ZLrPDMQ6s+/fRIBducFyvspP6QmuIOX9SYFAlBRTRV0xfD5mxNAFGo
+TdTNw9mHGf7WF3hkBKCIBGFb0gpNTD+8q9Sy6QlyhG5+/jEnuA42Y/rNRphhWYD/
+wWqHH+ZiNfBHzHk+0jNenHn/NxjI2QEI6UXzQP+I9t8ArLkRvu85DBWk8wuBO/vu
+TxPFjG04A9lP52MKOR/ThWxu+2tzuB5Xcc6iQmtoi2AEHRJjWTMk6426iJWpAewM
+wIGi1l0GxsrcaqooxA22waMYIRhYXGXfApFNnoK3NCA+b/EFjFR50XJ7AROWVTRu
+mEsQSrhZLGIIQMTCgiv7FkUoSYSAziwazGROTc0NMKf/V025D/WBsJ2+Qn+7EW6M
+QPtSeZGNJVRQknt+Oek8tqton3yVYkKRtBCv/6IYLERHNiAYgWEJDyHzY95Kf9S0
+8FfDrqKPGonYJus7LpwDuFIjwFDatqwkLEheiyJfFqjEg9wlQr1ki/dsXP0YB39K
+IgCluRbAHgZb2wKutxk6IvSvz4Cxnto2BJFKH5Gw7f0iiZo5xq4ApWtzumxQg9Im
+Myx5rcL8yCCarR2y9xz2Y53GY+vVTl7ZVjrqMll2ZAPKIA3bKKPhH/LuFnoX19ta
+OyMRhavW1mQZ1O3i50nYvQ+2G1SuyMoLRzIY/3Usggc=
+EOF
+) > /etc/chef/encrypted_data_bag_secret
+
+fi
+
+
+mkdir -p /etc/chef/ohai/hints
+touch /etc/chef/ohai/hints/ec2.json
+
+if [ ! -f /usr/bin/chef-client ]; then
+  cd /tmp
+  yum install -y chef
+fi
+
+if [ -L /usr/bin/python2.7 ]; then
+	ln -sf /usr/bin/python2.6 /usr/bin/python
+fi
+
+<%= start_chef %>
+
+'

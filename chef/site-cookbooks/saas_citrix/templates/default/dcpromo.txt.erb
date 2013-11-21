@@ -1,0 +1,12 @@
+[DCINSTALL]
+UserName=Administrator
+Password=<%= node[:saas_citrix][:admin_pw] %>
+ReplicaDomainDNSName=<%= node[:saas_citrix][:domain] %>
+UserDomain=<%= node[:saas_citrix][:domain] %>
+NewDomainDNSName=<%= node[:saas_citrix][:domain] %>
+NewDomain=Forest
+ReplicaOrNewDomain=<%= @domain_or_replica %>
+InstallDNS=Yes
+ConfirmGC=Yes
+SafeModeAdminPassword=<%= node[:saas_citrix][:admin_pw] %>
+RebootOnCompletion=No

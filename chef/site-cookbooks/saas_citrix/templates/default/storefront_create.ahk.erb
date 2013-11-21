@@ -1,0 +1,157 @@
+SetWinDelay, 100
+SetMouseDelay, 100
+
+IfWinExist Citrix StoreFront
+{ 
+  WinActivate
+}
+else
+{
+  Run, C:\Users\Administrator\Desktop\XenApp Installer\storefront\CitrixStoreFront-x64.exe
+  WinWait, Citrix StoreFront
+  WinActivate
+}
+
+  
+Sleep, 20000
+Click 371,480 ; Check box
+Click 519,525 ; Click next 
+Click 519,525 ; Click next 
+Click 519,525 ; Click Install
+
+sleep, 280000
+Click 607,528 ; Click Finish
+
+
+sleep, 40000
+WinWait, Citrix StoreFront
+WinActivate
+
+
+Click 441,314 ; Create a new deployment
+sleep, 20000
+
+WinWait, Create New Deployment
+WinActivate
+
+MouseClickDrag, Left, 700, 189, 306, 189
+sleep 100
+
+Send {Backspace}<%= node[:saas_citrix][:storefront][:int] %>{Enter}
+sleep 1200000
+
+
+
+WinWait, Create Store
+WinActivate
+
+Click 360,180
+Send <%= node[:saas_citrix][:farm] %>{Enter}
+
+Click 280,346
+Sleep 100
+
+WinWait, Add Delivery Controller
+WinActivate
+MouseClickDrag, Left, 210, 65, 130, 65
+sleep 100
+Send {Backspace}<%= node[:saas_citrix][:farm] %>
+Click 137,118
+Click 161,304
+Sleep 100
+
+WinWait, Add Server
+WinActivate
+Click 151,67
+Send <%= node[:saas_citrix][:xa1][:ip] %>{Enter}
+
+WinWait, Add Delivery Controller
+WinActivate
+Click 137,118
+Click 161,304
+Sleep 100
+
+WinWait, Add Server
+WinActivate
+Click 151,67
+Send <%= node[:saas_citrix][:xa2][:ip] %>{Enter}
+Sleep 100
+
+WinWait Add Delivery Controller
+WinActivate
+Click 344,421
+Sleep 100
+
+WinWait, Create Store
+WinActivate
+Click 640,540
+Sleep 100
+
+WinWait, Create Store
+WinActivate
+
+Click 417,188
+Click 441,353
+
+WinWait, Add NetScaler Gateway Appliance
+WinActivate
+
+Send, {Tab}<%= node[:saas_citrix][:tenant] %>
+Send, {Tab}<%= node[:saas_citrix][:storefront][:url1] %>
+Send, {Tab}{Tab}{Tab}{Tab}<%= node[:saas_citrix][:storefront][:url1] %>{Enter}
+
+Send, {Tab}{Enter}
+
+WinWait, Add Secure Ticket Authority URL
+WinActivate
+Send, {Tab}http://<%= node[:saas_citrix][:xa1][:ip] %>:8080{Enter}
+Sleep, 100
+
+
+Send, {Enter}
+WinWait, Add Secure Ticket Authority URL
+WinActivate
+Send, {Tab}http://<%= node[:saas_citrix][:xa2][:ip] %>:8080{Enter}
+Sleep, 100
+
+WinWait, Add NetScaler Gateway Appliance
+WinActivate
+Click 264,364
+Send, {Tab}{Tab}{Enter}
+Sleep, 100
+
+WinWait, Create Store
+WinActivate
+
+Click 417,188
+Click 441,353
+
+WinWait, Add NetScaler Gateway Appliance
+WinActivate
+
+Send, {Tab}<%= node[:saas_citrix][:farm] %>
+Send, {Tab}<%= node[:saas_citrix][:storefront][:url2] %>
+Send, {Tab}{Tab}{Tab}{Tab}<%= node[:saas_citrix][:storefront][:url2] %>{Enter}
+
+Send, {Tab}{Enter}
+
+WinWait, Add Secure Ticket Authority URL
+WinActivate
+Send, {Tab}http://<%= node[:saas_citrix][:xa1][:ip] %>:8080{Enter}
+Sleep, 100
+
+
+Send, {Enter}
+WinWait, Add Secure Ticket Authority URL
+WinActivate
+Send, {Tab}http://<%= node[:saas_citrix][:xa2][:ip] %>:8080{Enter}
+Sleep, 100
+
+WinWait, Add NetScaler Gateway Appliance
+WinActivate
+Click 264,364
+Send, {Tab}{Tab}{Enter}
+Sleep, 100
+Send, {Enter}
+Sleep, 1000
+Send, {Enter}

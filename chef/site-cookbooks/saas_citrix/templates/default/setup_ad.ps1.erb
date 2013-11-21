@@ -1,0 +1,56 @@
+param($Step="A")
+# -------------------------------------
+# Imports
+# -------------------------------------
+$script = $myInvocation.MyCommand.Definition
+$scriptPath = Split-Path -parent $script
+. (Join-Path $scriptpath functions.ps1)
+. (Join-Path $scriptpath saas.ps1)
+
+
+Clear-Any-Restart
+
+if (Should-Run-Step "A")
+{
+  Write-Host "A. Set Auto Login and wait for Chef reboot."
+  Set-AutoLogin
+  Set-Key-And-Exit $script "B"
+}
+
+if (Should-Run-Step "B") 
+{
+  Write-Host "B. Configure networking and hostname."
+  Setup-Networking
+  Restart-And-Resume $script "C"
+}
+
+if (Should-Run-Step "C") 
+{
+  Write-Host "C. Install Windows Updates."
+  Windows-Update
+  Restart-And-Resume $script "D"
+}
+
+if (Should-Run-Step "D") 
+{
+  Write-Host "D. Install Active Directory and reboot."
+  Update-Nameservers
+  Install-AD
+  Set-AutoLogin $True
+  Restart-And-Resume $script "E"
+}
+
+if (Should-Run-Step "E") 
+{
+  Write-Host "E. Add DNS Records."
+  Stop-AutoLogin
+  Add-Records
+  Restart-And-Resume $script "F"
+}
+
+if (Should-Run-Step "F")
+{
+  Write-Host "F. AD setup done."
+}
+
+Wait-For-Keypress "AD setup complete, press any key to exit script..."

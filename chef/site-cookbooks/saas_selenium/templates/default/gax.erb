@@ -1,0 +1,15 @@
+Feature: Genesys gax administration login works
+
+Background:
+  Given I am on <%%= url %>
+
+Scenario: Login to gax Administrator Portal
+  Then I sleep 5 seconds
+  Then I take a screenshot "gax-pre-login"
+  When I fill in "Username" with "<%%= user %>"
+  When I fill in "Password" with "<%%= pass %>"
+  And I press "Log In"
+  Then I sleep 20 seconds
+  Then I take a screenshot "gax-logged-in"
+  Then I should see "This product is focused on the user experience"
+  

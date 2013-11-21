@@ -1,0 +1,16 @@
+{
+  "license": {
+    "file": "base64d license file"
+  },
+  "id": "_wildcard",
+  "credentials": {
+    "default_admin": {
+      "username": "admin",
+      "password": "admin123"
+    },
+    "updated_admin": {
+      "username": "admin",
+      "password": "new_password"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+SetWinDelay, 100
+SetMouseDelay, 100
+
+IfWinExist Citrix StoreFront
+{ 
+  WinActivate
+}
+else
+{
+  Run, C:\Users\Administrator\Desktop\XenApp Installer\storefront\CitrixStoreFront-x64.exe
+  WinWait, Citrix StoreFront
+  WinActivate
+}
+
+  
+Sleep, 10000
+Click 371,480 ; Check box
+Click 519,525 ; Click next 
+Click 519,525 ; Click next 
+Click 519,525 ; Click Install
+
+sleep, 180000
+Click 607,528 ; Click Finish

@@ -1,0 +1,6 @@
+source 'https://rubygems.org'
+
+gem "chromedriver-helper"
+gem "cucumber"
+gem "capybara"
+gem "selenium-webdriver"

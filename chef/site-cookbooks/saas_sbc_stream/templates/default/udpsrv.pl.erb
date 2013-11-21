@@ -1,0 +1,45 @@
+use strict;
+use IO::Socket;
+
+my($sock, $newmsg, $src_host, $MAX_MSG_LEN, $UDP_PORT);
+$MAX_MSG_LEN = 150000;
+$UDP_PORT = 2500;
+
+# log file options
+my $log_file = '/var/log/sbc/sv5sbc_sip';
+my $max_log_size = 100 * 1024 * 1024;
+
+my $filename = new_log_name();
+open(LOG,">>$filename");
+
+$sock = IO::Socket::INET->new(LocalPort => $UDP_PORT, Proto => 'udp')
+    or die "socket: $@";
+
+print LOG "Awaiting UDP messages on port $UDP_PORT\n";
+#my($port, $ipaddr) = sockaddr_in($sock->peername);
+#my $src_host = gethostbyaddr($ipaddr, AF_INET);
+
+while ($sock->recv($newmsg, $MAX_MSG_LEN)) {
+
+    if($newmsg =~ /^sipmsg/) {
+        print LOG "Received:\n$newmsg\n";
+        if(tell(LOG) >= $max_log_size) {
+            $filename = new_log_name();
+            close(LOG);
+            open(LOG,">>$filename");
+        }
+    }
+}
+
+close(LOG);
+die "recv: $!";
+
+sub new_log_name
+{
+    my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
+    my $year = $yearOffset+1900;
+    $month += 1;
+    my $new_log_filename = $log_file.'.'.sprintf("%04d%02d%02d_%02d%02d%02d.log",$year,$month,$dayOfMonth,$hour,$minute,$second);
+    #print "new log file name: $new_log_filename\n";
+    return $new_log_filename;
+}

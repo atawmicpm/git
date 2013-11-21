@@ -1,0 +1,23 @@
+
+## Ops cookbooks
+cookbook 'kibana', path: 'cookbooks/kibana'
+#cookbook 'logstash', path: 'cookbooks/logstash'
+cookbook 'yum'
+cookbook 'openssh'
+cookbook 'openldap'
+
+cookbook 'nexus', git: 'https://github.com/AngelInc/nexus-cookbook', tag: '2.2.1'
+
+
+%w{ yum-repos repository-manager}.each do |c|
+  cookbook c, hg:"http://hg-vm01.genesyslab.com/artifact_management", rel: "cookbooks/#{c}", tag:"13.10.3" 
+end
+
+
+#Grab cookbooks from the devops voicemachine
+
+%w{ genesys service_base }.each do |c|
+  cookbook c, hg:"http://hg-vm01.genesyslab.com/devops_voicevm", tag:"13.10.0", rel: "site-cookbooks/#{c}" 
+end
+
+

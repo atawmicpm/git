@@ -1,0 +1,87 @@
+param($Step="A")
+# -------------------------------------
+# Imports
+# -------------------------------------
+$script = $myInvocation.MyCommand.Definition
+$scriptPath = Split-Path -parent $script
+. (Join-Path $scriptpath functions.ps1)
+. (Join-Path $scriptpath saas.ps1)
+
+
+Clear-Any-Restart
+
+if (Should-Run-Step "A")
+{
+  Write-Host "A. Install RDS and set Auto Login and wait for Chef reboot."
+  Install-RDS
+  Set-AutoLogin
+  Set-Key-And-Exit $script "B"
+}
+
+if (Should-Run-Step "B") 
+{
+  Write-Host "B. Configure networking and hostname."
+  Setup-Networking
+  Restart-And-Resume $script "C"
+}
+
+if (Should-Run-Step "C") 
+{
+  Write-Host "C. Install Windows Updates."
+  Windows-Update
+  Restart-And-Resume $script "D"
+}
+
+if (Should-Run-Step "D") 
+{
+  Write-Host "D. Joining Domain."
+  Update-Nameservers
+  Join-Domain
+  Set-AutoLogin $True
+  Restart-And-Resume $script "E"
+}
+
+if (Should-Run-Step "E") 
+{
+  Write-Host "E. Install Desktop Experience."
+  Install-DesktopExperience
+  Restart-And-Resume $script "F"
+}
+
+if (Should-Run-Step "F") 
+{
+  Write-Host "F. Install XenApp and reboot. pt 1/2"
+  Install-XenApp
+  Restart-And-Resume $script "G"
+}
+
+if (Should-Run-Step "G") 
+{
+  Write-Host "G. Install XenApp and reboot. pt 2/2"
+  Install-XenApp
+  Restart-And-Resume $script "H"
+}
+
+if (Should-Run-Step "H") 
+{
+  Write-Host "H. Patch XenApp."
+  Patch-XenApp
+  Restart-And-Resume $script "I"
+}
+
+if (Should-Run-Step "I") 
+{
+  Write-Host "I. Config XenApp and reboot."
+  Config-XenApp
+  Restart-And-Resume $script "J"
+}
+
+if (Should-Run-Step "J") 
+{
+  Write-Host "J. Install Storefront."
+  Install-Storefront
+  Stop-AutoLogin
+}
+
+Wait-For-Keypress "XenApp setup complete, press any key to exit script..."
+

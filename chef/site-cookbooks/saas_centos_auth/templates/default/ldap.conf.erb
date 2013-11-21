@@ -1,0 +1,5 @@
+TLS_CACERTDIR /etc/openldap/cacerts
+URI <%=node['centos_auth']['server'] %>
+BASE <%=node['centos_auth']['basedn'] %>
+tls_reqcert never
+ssl on

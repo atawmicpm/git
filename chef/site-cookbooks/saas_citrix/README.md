@@ -1,0 +1,1 @@
+This cookbook is used to configure Citrix nodes and active directory.

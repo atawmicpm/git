@@ -1,0 +1,43 @@
+[domain/default]
+
+ldap_id_use_start_tls = True
+ldap_schema = rfc2307bis
+ldap_search_base = <%= node[:authconfig][:ldap][:dnbase] %>
+krb5_realm = EXAMPLE.COM
+krb5_server = kerberos.example.com
+id_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+ldap_uri = <%= node[:authconfig][:ldap][:server] %>
+cache_credentials = True
+ldap_tls_cacertdir = /etc/openldap/cacerts
+
+
+ldap_access_filter = gidNumber=*
+enumerate = True
+ldap_tls_reqcert = never
+ldap_default_bind_dn = <%= @ldap_default_bind_dn %>
+ldap_default_authtok_type = password
+ldap_default_authtok = <%= @ldap_default_authtok %>
+
+ldap_user_object_class = person
+ldap_user_modify_timestamp = whenChanged
+ldap_user_home_directory = unixHomeDirectory
+ldap_user_shell = loginShell
+ldap_user_principal = userPrincipalName
+ldap_user_name = sAMAccountName
+ldap_user_uid_number = uidNumber
+ldap_user_gid_number = gidNumber
+ldap_user_home_directory = unixHomeDirectory
+ldap_user_shell = loginShell
+ldap_user_principal = userPrincipalName
+ldap_group_modify_timestamp = whenChanged
+ldap_group_object_class = group
+ldap_group_name = sAMAccountName
+ldap_group_gid_number = gidNumber
+ldap_force_upper_case_realm = True
+
+[sssd]
+services = nss, pam
+config_file_version = 2
+domains = default

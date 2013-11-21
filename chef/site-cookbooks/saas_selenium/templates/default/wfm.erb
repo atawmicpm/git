@@ -1,0 +1,13 @@
+Feature: Genesys wfm workforce management portal login works
+
+Background:
+    Given I am on <%%= url %>
+
+Scenario: Login to wfm Workforce Management Portal
+    Then I take a screenshot "wfm-pre-login"
+    When I fill in "Username" with "<%%= user %>"
+    When I fill in "Password" with "<%%= pass %>"
+    And I press "Log In"
+    Then I sleep 10 seconds
+    Then I take a screenshot "wfm-logged-in"
+    Then I should see "My Schedule"

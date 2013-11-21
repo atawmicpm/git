@@ -1,0 +1,110 @@
+#
+# Cookbook Name:: authconfig
+
+# Recipe:: default
+#
+# Copyright 2012, Jesse Campbell
+#
+# All rights reserved - Do Not Redistribute
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+secret = Chef::EncryptedDataBagItem.load_secret("/etc/chef/encrypted_data_bag_secret")
+ldap_secrets = Chef::EncryptedDataBagItem.load("credentials", "ldap", secret)
+ 
+# Run the authconfig script, only on arguments file change
+execute "authconfig-update" do
+	command "/bin/cat /etc/authconfig/arguments | /usr/bin/xargs /usr/sbin/authconfig --updateall"
+	action :nothing
+end
+
+service "autofs" do
+	supports :status => true, :restart => true, :reload => true
+end
+
+directory "/etc/authconfig" do
+	owner "root"
+	group "root"
+	mode "0755"
+	action :create
+end
+
+template "/etc/authconfig/arguments" do
+	source "arguments.erb"
+	mode 0440
+	owner "root"
+	group "root"
+	notifies :run, "execute[authconfig-update]", :immediately
+	notifies :reload, "service[autofs]" if node['authconfig']['use_autofs']
+end
+
+if node['authconfig']['ldap']['enable']
+  package 'pam_ldap' do
+    action :install
+  end
+end
+
+if node['authconfig']['kerberos']['enable']
+  package 'pam_krb5' do
+    action :install
+  end
+end
+
+if node[:platform_version].to_i == 6
+
+	['sssd', 'sssd-tools', 'sssd-client'].each do |p|
+		package p do
+			action :install
+		end
+	end
+
+	service "sssd" do
+		supports :status => true, :restart => true, :reload => true
+	end
+
+	execute "clean_sss_db" do
+		command "rm -f /var/lib/sss/db/*"
+		action :nothing
+	end
+
+	execute "restorecon /etc/sssd/sssd.conf" do
+		action :nothing
+	end
+
+	template "/etc/sssd/sssd.conf" do
+		source "sssd.conf.erb"
+		mode 0600
+		owner "root"
+		group "root"
+		
+		variables(:ldap_default_bind_dn => ldap_secrets['ldap_default_bind_dn'], 
+							:ldap_default_authtok => ldap_secrets['ldap_default_authtok'])
+
+		notifies :run, "execute[clean_sss_db]", :immediately
+		notifies :run, "execute[restorecon /etc/sssd/sssd.conf]", :immediately
+		notifies :restart, "service[sssd]", :immediately
+	end
+
+elsif node[:platform_version].to_i == 5
+	#ldap users don't work immediately, sleeping 60 seems to fix. TODO Fix this hack
+	execute "sleep 60" do
+		action :nothing
+	end
+	template "/etc/ldap.conf" do
+		source "ldap.conf.erb"
+		mode 0644
+		owner "root"
+		group "root"
+		notifies :run, "execute[sleep 60]", :immediately
+	end
+end

@@ -1,0 +1,12 @@
+Feature: Genesys Ops Maintenace Schedule login works
+
+Background:
+  Given I am on <%%= url %>
+
+Scenario: Login to ops Maintenance Schedule
+  Then I take a screenshot "ops-pre-login"
+  When I fill in "Username" with "<%%= user %>"
+  When I fill in "Password" with "<%%= pass %>"
+  And I press "Log In"
+  Then I take a screenshot "ops-logged-in"
+  Then I should see "World Wide Maintenance Schedule"

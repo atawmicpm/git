@@ -1,0 +1,15 @@
+{
+  "license": {
+    "iv": "QVEjOGEGdRYDQqe3pQur5w==\n",
+    "cipher": "aes-256-cbc",
+    "version": 1,
+    "encrypted_data": "kRykL/boE71D5fV3RpdOUS6nb9UQ8G+hfpGPsQ4kEVo7P/l3kSUks7u98Jt9\nI7GpaXlvmSziF66+kPq2NxNdzA==\n"
+  },
+  "id": "dev-aws",
+  "credentials": {
+    "iv": "1WQVaMFBAX2Nt8NJTJrPHQ==\n",
+    "cipher": "aes-256-cbc",
+    "version": 1,
+    "encrypted_data": "0OJefFk/kRiacFgLxa4tn0DA4vQEyi33xCPOmYlKoumngXDLWHVkUVM91PKu\ndDii78lU4sIlSk0nTTbYrjxGMLh69aMWkLg4YiPo5qeKtH7hzj2vfOzV9R6d\nlLZMc7cVZtxr2/hhzZf46R2ThV+JnuavgQU/+XhrRMTRAM7FCwKFicFfl9gG\nutFaF4DHQGbu\n"
+  }
+}

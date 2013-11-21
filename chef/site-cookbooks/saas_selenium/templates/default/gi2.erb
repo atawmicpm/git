@@ -1,0 +1,14 @@
+Feature: Genesys gi2 reporting login works
+
+Background:
+  Given I am on <%%= url %>
+
+Scenario: Login to gi2 Reporting Portal
+  Then I take a screenshot "gi2-pre-login"
+  Then I switch to iframe "infoView_home"
+  When I cimfill in "usernameTextEdit" with "<%%= user %>"
+  When I cimfill in "passwordTextEdit" with "<%%= pass %>"
+  And I press "Log On"
+  Then I sleep 2 seconds
+  Then I take a screenshot "gi2-logged-in"
+  Then I should gi2see "View your Inbox, Favorites, or Document Lists."
